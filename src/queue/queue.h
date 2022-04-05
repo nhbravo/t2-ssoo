@@ -11,5 +11,5 @@ struct queue {
   int quantum;
 };
 
-Queue* queue_init(int process_quenatity);
+Queue* queue_init(int process_quenatity, int priority, int q);
 void queue_destroy(Queue* queue);
