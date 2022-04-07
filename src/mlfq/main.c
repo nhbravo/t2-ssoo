@@ -16,7 +16,7 @@ int main(int argc, char const *argv[])
 	printf("Nombre archivo: %s\n", file_name);
 	printf("Cantidad de procesos: %d\n", input_file->len);
 	printf("Procesos:\n");
-	Queue **queues;
+	Queue *queues[3];
 	for (int i = 2; i >= 0; i --) {
 		queues[i] = queue_init(0, i, atoi(argv[3]), input_file->len);
 	}
@@ -51,7 +51,7 @@ int main(int argc, char const *argv[])
 			break;
 		}
 
-		for (int i; i < queues[index] -> process_quantity; i ++) {
+		for (int i = 0; i < queues[index] -> process_quantity; i ++) {
 			Process *actual_process = queues[index] -> processes[i];
 
 			if (actual_process) {
@@ -100,9 +100,9 @@ int main(int argc, char const *argv[])
 		}
 
 		index --;
-		for (index; index >= 0; index--) {
-			for (int i; i < queues[index] -> process_quantity; i++) {
-				Process *actual_process = queues[index] -> processes[i];
+		for (int j = index; j >= 0; j--) {
+			for (int i = 0; i < queues[j] -> process_quantity; i++) {
+				Process *actual_process = queues[j] -> processes[i];
 
 				if ((actual_tick - actual_process -> init_time) % actual_process -> s == 0) {
 					continue;
