@@ -13,3 +13,5 @@ struct queue {
 
 Queue* queue_init(int process_quenatity, int priority, int q);
 void queue_destroy(Queue* queue);
+void process_insert(Queue *queue, Process *process);
+Process *process_pop(Queue *queue);

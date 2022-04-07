@@ -21,5 +21,79 @@ void queue_destroy(Queue* queue)
         process_destroy(queue -> processes[i]);
     }
     free(queue -> processes);
-    free(queue); 
+    free(queue);
+}
+
+static void swap(Queue *queue, int i1, int i2)
+{
+  Process *aux = queue -> processes[i1];
+  queue -> processes[i1] = queue -> processes[i2];
+  queue -> processes[i2] = aux;
+}
+
+static int key(Queue *queue, int i)
+{
+  return queue -> processes[i] -> init_time;
+}
+
+static void sift_up(Queue *queue, int pos)
+{
+  if (!pos)
+    return;
+
+  int father = (pos - 1) / 2;
+  if (key(queue, father) > key(queue, pos))
+  {
+    swap(queue, pos, father);
+    sift_up(queue, father);
+  }
+}
+
+static void sift_down(Queue *queue, int pos)
+{
+  int left = pos * 2 + 1;
+  int right = left + 1;
+
+  if (queue -> process_quantity <= left)
+    return;
+
+  int smaller;
+  if (queue -> process_quantity == right || key(queue, left) < key(queue, right))
+    smaller = left;
+  else
+    smaller = right;
+
+  if (key(queue, pos) > key(queue, smaller))
+  {
+    swap(queue, pos, smaller);
+    sift_down(queue, smaller);
+  }
+}
+
+void process_insert(Queue *queue, Process *process)
+{
+  queue -> processes[queue -> process_quantity] = process;
+  queue -> process_quantity += 1;
+  sift_up(queue, queue -> process_quantity - 1);
+}
+
+Process *process_pop(Queue *queue)
+{
+  if (!queue -> process_quantity)
+    return NULL;
+
+  Process *process = queue -> processes[0];
+  queue -> process_quantity -= 1;
+  if (queue -> process_quantity > 0)
+  {
+    queue -> processes[0] = queue -> processes[queue -> process_quantity];
+    queue -> processes[queue -> process_quantity] = NULL;
+    sift_down(queue, 0);
+  }
+  else
+  {
+    queue -> processes[0] = NULL;
+  }
+
+  return process;
 }
