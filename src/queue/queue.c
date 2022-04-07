@@ -2,19 +2,19 @@
 
 #include "queue.h"
 
-Queue* queue_init(int process_quantity, int priority, int q, int total_processes)
+Queue *queue_init(int process_quantity, int priority, int q, int total_processes)
 {
-    Queue* queue = malloc(sizeof(Queue));
+    Queue *queue = malloc(sizeof(Queue));
 
     queue -> process_quantity = process_quantity;
-    queue -> processes = malloc(total_processes * sizeof(Process*));
+    queue -> processes = malloc(total_processes * sizeof(Process *));
     queue -> priority = priority;
     queue -> quantum = q * priority;
 
     return queue;
 }
 
-void queue_destroy(Queue* queue)
+void queue_destroy(Queue *queue)
 {
     for (int i = 0; i < queue -> process_quantity; i++)
     {

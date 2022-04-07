@@ -16,12 +16,9 @@ int main(int argc, char const *argv[])
 	printf("Cantidad de procesos: %d\n", input_file->len);
 	printf("Procesos:\n");
 	Queue **queues;
-	Queue *queue_2 = queue_init(0, 2, 5, input_file->len);
-	Queue *queue_1 = queue_init(0, 1, 5, input_file->len);
-	Queue *queue_0 = queue_init(0, 0, 5, input_file->len);
-	queues[0] = queue_0;
-	queues[1] = queue_1;
-	queues[2] = queue_2;
+	for (int i = 2; i >= 0; i --) {
+		queues[i] = queue_init(0, i, atoi(argv[3]), input_file->len);
+	}
 	int actual_tick = 0;
 	bool cpu_free = true;
 
@@ -35,7 +32,7 @@ int main(int argc, char const *argv[])
 			atoi(input_file->lines[i][5]),
 			atoi(input_file->lines[i][6])
 		);
-		process_insert(queue_2, process);
+		process_insert(queues[2], process);
 	}
 
 	while (actual_tick >= 0) {
@@ -87,8 +84,8 @@ int main(int argc, char const *argv[])
 		actual_tick ++;
 	}
 
-	queue_destroy(queue_2);
-	queue_destroy(queue_1);
-	queue_destroy(queue_0);
+	for (int i = 2; i >= 0; i --) {
+		queue_destroy(queues[i]);
+	}
 	input_file_destroy(input_file);
 }
