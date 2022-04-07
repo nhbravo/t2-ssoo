@@ -9,10 +9,8 @@ Process* process_init(
   Process *process = malloc(sizeof(Process));
   process -> pid = pid;
   process -> name = strdup(name);
-  process -> priority = 0;
-  process -> state = READY;
+  process -> state = NULL;
   process -> init_time = init_time;
-  process -> current_time = 0;
   process -> cycles = cycles;
   process -> wait = wait;
   process -> waiting_delay = waiting_delay;
