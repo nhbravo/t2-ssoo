@@ -6,7 +6,7 @@ typedef struct queue Queue;
 
 struct queue {
   int process_quantity;
-  Process** process;
+  Process** processes;
   int priority;
   int quantum;
 };
