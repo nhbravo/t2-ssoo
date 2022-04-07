@@ -52,21 +52,29 @@ int main(int argc, char const *argv[])
 			Process *actual_process = queues[index] -> processes[i];
 
 			if (actual_process) {
+				if (actual_process -> init_time <= actual_tick && actual_process -> state == CREATED) {
+					actual_process -> state = READY;
+				}
+
 				if (actual_process -> init_time > actual_tick) {
 					break;
 				}
-				if (actual_process -> state == READY || actual_process -> init_time <= actual_tick) {
-					actual_process -> state = READY;
+
+				if (actual_process -> state == READY) {
 					if (cpu_free) {
 						cpu_free = false;
 						actual_process -> state = RUNNING;
 					}
 				} else if (actual_process -> state == RUNNING) {
-
+					continue;
 				} else if (actual_process -> state == FINISHED) {
 					Process *finished_process = process_pop(queues[index]);
 					process_destroy(finished_process);
+				} else if (actual_process -> state == WAITING) {
+					continue;
 				}
+
+				// s
 			}
 		}
 
