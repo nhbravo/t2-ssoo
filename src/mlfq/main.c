@@ -16,6 +16,8 @@ int main(int argc, char const *argv[])
 	printf("Nombre archivo: %s\n", file_name);
 	printf("Cantidad de procesos: %d\n", input_file->len);
 	printf("Procesos:\n");
+	FILE *fpt;
+	fpt = fopen("MyFile.csv", "w+");
 	Queue *queues[3];
 	for (int i = 2; i >= 0; i --) {
 		queues[i] = queue_init(0, i, atoi(argv[3]), input_file->len);
@@ -85,6 +87,13 @@ int main(int argc, char const *argv[])
 					}
 				} else if (actual_process -> state == FINISHED) {
 					Process *finished_process = process_pop(queues[index]);
+					fprintf(fpt,"%s,%i,%i,%i,%i,%i\n",
+						finished_process -> name,
+						finished_process -> in_cpu_count,
+						finished_process -> interrupt_count,
+						0,
+						actual_tick - finished_process -> init_time,
+						finished_process -> in_ready_count + finished_process -> in_waiting_count);
 					process_destroy(finished_process);
 				} else if (actual_process -> state == WAITING) {
 					actual_process -> in_waiting_count ++;
@@ -117,4 +126,5 @@ int main(int argc, char const *argv[])
 		queue_destroy(queues[i]);
 	}
 	input_file_destroy(input_file);
+	fclose(fpt);
 }
