@@ -11,6 +11,7 @@ Process* process_init(
   process -> name = strdup(name);
   process -> state = CREATED;
   process -> init_time = init_time;
+  process -> enter_queue_time = init_time;
   process -> cycles = cycles;
   process -> wait = wait;
   process -> waiting_delay = waiting_delay;

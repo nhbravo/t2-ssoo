@@ -35,10 +35,10 @@ static int key(Queue *queue, int i)
 {
     if (queue -> priority)
     {
-        return queue -> processes[i] -> init_time;
+        return queue -> processes[i] -> enter_queue_time;
     }
     // TODO: change to min process length
-    return queue -> processes[i] -> init_time;
+    return queue -> processes[i] -> enter_queue_time;
 }
 
 static void sift_up(Queue *queue, int pos)
@@ -98,6 +98,36 @@ Process *process_pop(Queue *queue)
     else
     {
         queue -> processes[0] = NULL;
+    }
+
+    return process;
+}
+
+Process *process_pop_index(Queue *queue, int index)
+{
+    if (!queue -> process_quantity)
+        return NULL;
+
+    Process *process = queue -> processes[index];
+    queue -> process_quantity -= 1;
+    if (queue -> process_quantity > 0)
+    {
+        queue -> processes[index] = queue -> processes[queue -> process_quantity];
+        queue -> processes[queue -> process_quantity] = NULL;
+        int father = (index - 1) / 2;
+        if (father >= 0) {
+            if (key(queue, father) > key(queue, index)) {
+                sift_up(queue, index);
+            } else {
+                sift_down(queue, index);
+            }
+        } else {
+            sift_down(queue, index);
+        }
+    }
+    else
+    {
+        queue -> processes[index] = NULL;
     }
 
     return process;
