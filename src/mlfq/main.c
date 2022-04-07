@@ -1,6 +1,7 @@
 #include <stdio.h>	// FILE, fopen, fclose, etc.
 #include <stdlib.h> // malloc, calloc, free, etc
 #include <stdbool.h>
+#include <stdint.h>
 #include "../process/process.h"
 #include "../queue/queue.h"
 #include "../file_manager/manager.h"
@@ -36,7 +37,9 @@ int main(int argc, char const *argv[])
 	}
 
 	while (actual_tick >= 0) {
+		bool change_cpu_state = false;
 		int index = 2;
+
 		while (queues[index] -> process_quantity == 0) {
 			index --;
 			if (index < 0) {
@@ -61,21 +64,39 @@ int main(int argc, char const *argv[])
 				}
 
 				if (actual_process -> state == READY) {
+					actual_process -> in_ready_count ++;
 					if (cpu_free) {
 						cpu_free = false;
 						actual_process -> state = RUNNING;
+						actual_process -> in_cpu_count ++;
 					}
 				} else if (actual_process -> state == RUNNING) {
-					continue;
+					actual_process -> running_time ++;
+					if (actual_process -> running_time % actual_process -> wait == 0) {
+						actual_process -> state = WAITING;
+						change_cpu_state = true;
+					} else if (actual_process -> running_time == queues[index] -> quantum) {
+						actual_process -> state = READY;
+						actual_process -> interrupt_count ++;
+						change_cpu_state = true;
+						// pop process and add to next queue
+					} else if (actual_process -> running_time == actual_process -> cycles) {
+						actual_process -> state = FINISHED;
+					}
 				} else if (actual_process -> state == FINISHED) {
 					Process *finished_process = process_pop(queues[index]);
 					process_destroy(finished_process);
 				} else if (actual_process -> state == WAITING) {
+					actual_process -> in_waiting_count ++;
 					continue;
 				}
 
 				// s
 			}
+		}
+
+		if (change_cpu_state) {
+			cpu_free = true;
 		}
 
 		index --;

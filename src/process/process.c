@@ -12,10 +12,15 @@ Process* process_init(
   process -> state = CREATED;
   process -> init_time = init_time;
   process -> enter_queue_time = init_time;
+  process -> running_time = 0;
   process -> cycles = cycles;
   process -> wait = wait;
   process -> waiting_delay = waiting_delay;
   process -> s = s;
+  process -> in_cpu_count = 0;
+  process -> interrupt_count = 0;
+  process -> in_ready_count = 0;
+  process -> in_waiting_count = 0;
   return process;
 };
 
