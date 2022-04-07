@@ -8,7 +8,7 @@ struct process
 {
   int32_t pid;
   char *name;
-  enum state { RUNNING, READY, WAITING, FINISHED } state;
+  enum state { RUNNING, READY, WAITING, FINISHED, CREATED } state;
   int32_t init_time;
   int32_t cycles;
   int32_t wait;

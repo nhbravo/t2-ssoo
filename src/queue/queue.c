@@ -2,12 +2,12 @@
 
 #include "queue.h"
 
-Queue* queue_init(int process_quantity, int priority, int q)
+Queue* queue_init(int process_quantity, int priority, int q, int total_processes)
 {
     Queue* queue = malloc(sizeof(Queue));
 
     queue -> process_quantity = process_quantity;
-    queue -> processes = malloc(process_quantity * sizeof(Process*));
+    queue -> processes = malloc(total_processes * sizeof(Process*));
     queue -> priority = priority;
     queue -> quantum = q * priority;
 

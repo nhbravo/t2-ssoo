@@ -1,5 +1,6 @@
 #include <stdio.h>	// FILE, fopen, fclose, etc.
 #include <stdlib.h> // malloc, calloc, free, etc
+#include <stdbool.h>
 #include "../process/process.h"
 #include "../queue/queue.h"
 #include "../file_manager/manager.h"
@@ -14,10 +15,15 @@ int main(int argc, char const *argv[])
 	printf("Nombre archivo: %s\n", file_name);
 	printf("Cantidad de procesos: %d\n", input_file->len);
 	printf("Procesos:\n");
-	Queue *queue_2 = queue_init(input_file->len, 2, 5);
-	Queue *queue_1 = queue_init(0, 1, 5);
-	Queue *queue_0 = queue_init(0, 0, 5);
+	Queue **queues;
+	Queue *queue_2 = queue_init(0, 2, 5, input_file->len);
+	Queue *queue_1 = queue_init(0, 1, 5, input_file->len);
+	Queue *queue_0 = queue_init(0, 0, 5, input_file->len);
+	queues[0] = queue_0;
+	queues[1] = queue_1;
+	queues[2] = queue_2;
 	int actual_tick = 0;
+	bool cpu_free = true;
 
 	for (int i = 0; i < input_file->len; ++i) {
 		Process *process = process_init(
@@ -33,15 +39,52 @@ int main(int argc, char const *argv[])
 	}
 
 	while (actual_tick >= 0) {
-		Process *actual_process = process_pop(queue_2);
-
-		printf("%i\n", actual_process->init_time);
-
-		if (!actual_process) {
-			actual_tick = -1;
-		} else {
-			actual_tick ++;
+		int index = 2;
+		while (queues[index] -> process_quantity == 0) {
+			index --;
+			if (index < 0) {
+				break;
+			}
 		}
+
+		if (index < 0) {
+			break;
+		}
+
+		for (int i; i < queues[index] -> process_quantity; i ++) {
+			Process *actual_process = queues[index] -> processes[i];
+
+			if (actual_process) {
+				if (actual_process -> init_time > actual_tick) {
+					break;
+				}
+				if (actual_process -> state == READY || actual_process -> init_time <= actual_tick) {
+					actual_process -> state = READY;
+					if (cpu_free) {
+						cpu_free = false;
+						actual_process -> state = RUNNING;
+					}
+				} else if (actual_process -> state == RUNNING) {
+
+				} else if (actual_process -> state == FINISHED) {
+					Process *finished_process = process_pop(queues[index]);
+					process_destroy(finished_process);
+				}
+			}
+		}
+
+		index --;
+		for (index; index >= 0; index--) {
+			for (int i; i < queues[index] -> process_quantity; i++) {
+				Process *actual_process = queues[index] -> processes[i];
+
+				if ((actual_tick - actual_process -> init_time) % actual_process -> s == 0) {
+					continue;
+				}
+			}
+		}
+		
+		actual_tick ++;
 	}
 
 	queue_destroy(queue_2);
