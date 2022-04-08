@@ -20,6 +20,7 @@ struct process
   int32_t interrupt_count;
   int32_t in_ready_count;
   int32_t in_waiting_count;
+  int32_t last_s;
 };
 
 Process* process_init(

@@ -37,8 +37,8 @@ static int key(Queue *queue, int i)
     {
         return queue -> processes[i] -> enter_queue_time;
     }
-    // TODO: change to min process length
-    return queue -> processes[i] -> enter_queue_time;
+    // Cola 3, revisar
+    return queue -> processes[i] -> cycles - queue -> processes[i] -> running_time;
 }
 
 static void sift_up(Queue *queue, int pos)
@@ -51,6 +51,18 @@ static void sift_up(Queue *queue, int pos)
     {
         swap(queue, pos, father);
         sift_up(queue, father);
+    }
+    else if (key(queue, father) == key(queue, pos))
+    {
+        // Orden de ingreso, priorizar un proceso que sale de la CPU, revisar
+        if (
+            queue -> processes[father] -> init_time == queue -> processes[father] -> enter_queue_time
+            && queue -> processes[pos] -> init_time != queue -> processes[pos] -> enter_queue_time
+        )
+        {
+            swap(queue, pos, father);
+            sift_up(queue, father);
+        }
     }
 }
 

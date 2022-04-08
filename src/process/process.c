@@ -21,6 +21,7 @@ Process* process_init(
   process -> interrupt_count = 0;
   process -> in_ready_count = 0;
   process -> in_waiting_count = 0;
+  process -> last_s = init_time;
   return process;
 };
 

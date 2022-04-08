@@ -16,6 +16,8 @@ int main(int argc, char const *argv[])
 	printf("Nombre archivo: %s\n", file_name);
 	printf("Cantidad de procesos: %d\n", input_file->len);
 	printf("Procesos:\n");
+	FILE *fpt;
+	fpt = fopen((char *)argv[2], "w+");
 	Queue *queues[3];
 	for (int i = 2; i >= 0; i --) {
 		queues[i] = queue_init(0, i, atoi(argv[3]), input_file->len);
@@ -55,7 +57,7 @@ int main(int argc, char const *argv[])
 			Process *actual_process = queues[index] -> processes[i];
 
 			if (actual_process) {
-				if (actual_process -> init_time <= actual_tick && actual_process -> state == CREATED) {
+				if (actual_process -> init_time == actual_tick && actual_process -> state == CREATED) {
 					actual_process -> state = READY;
 				}
 
@@ -64,34 +66,81 @@ int main(int argc, char const *argv[])
 				}
 
 				if (actual_process -> state == READY) {
-					actual_process -> in_ready_count ++;
-					if (cpu_free) {
+					// El proceso no puede entrar de una a CPU, tiene que estar READY, revisar
+					if (cpu_free && actual_process -> in_ready_count > 0) {
 						cpu_free = false;
 						actual_process -> state = RUNNING;
 						actual_process -> in_cpu_count ++;
+					} else {
+						actual_process -> in_ready_count ++;
 					}
 				} else if (actual_process -> state == RUNNING) {
 					actual_process -> running_time ++;
 					if (actual_process -> running_time % actual_process -> wait == 0) {
 						actual_process -> state = WAITING;
 						change_cpu_state = true;
-					} else if (actual_process -> running_time == queues[index] -> quantum) {
-						actual_process -> state = READY;
-						actual_process -> interrupt_count ++;
-						change_cpu_state = true;
-						// pop process and add to next queue
+						if (index != 2) {
+							actual_process -> enter_queue_time = actual_tick;
+							process_pop_index(queues[index], i);
+							process_insert(queues[2], actual_process);
+						}
+					} else if (index != 0) {
+						if (actual_process -> running_time % queues[index] -> quantum == 0) {
+							actual_process -> state = READY;
+							actual_process -> interrupt_count ++;
+							change_cpu_state = true;
+							actual_process -> enter_queue_time = actual_tick;
+							process_pop_index(queues[index], i);
+							process_insert(queues[index - 1], actual_process);
+						} else if (actual_process -> running_time == actual_process -> cycles) {
+							actual_process -> state = FINISHED;
+							fprintf(
+								fpt,"%s,%i,%i,%i,%i,%i\n",
+								actual_process -> name,
+								actual_process -> in_cpu_count,
+								actual_process -> interrupt_count,
+								0,
+								actual_tick - actual_process -> init_time,
+								actual_process -> in_ready_count + actual_process -> in_waiting_count
+							);
+						}
 					} else if (actual_process -> running_time == actual_process -> cycles) {
 						actual_process -> state = FINISHED;
+						process_pop(queues[index]);
+						fprintf(
+							fpt,"%s,%i,%i,%i,%i,%i\n",
+							actual_process -> name,
+							actual_process -> in_cpu_count,
+							actual_process -> interrupt_count,
+							0,
+							actual_tick - actual_process -> init_time,
+							actual_process -> in_ready_count + actual_process -> in_waiting_count
+						);
+						process_destroy(actual_process);
+						actual_process = NULL;
 					}
-				} else if (actual_process -> state == FINISHED) {
-					Process *finished_process = process_pop(queues[index]);
-					process_destroy(finished_process);
 				} else if (actual_process -> state == WAITING) {
 					actual_process -> in_waiting_count ++;
+					if (actual_process -> in_waiting_count % actual_process -> waiting_delay == 0) {
+						actual_process -> state = READY;
+					}
 					continue;
 				}
 
-				// s
+				// Check S
+				if (actual_process) {
+					if (
+						index != 2
+						&& (actual_process -> state == WAITING || actual_process -> state == READY)
+						&& actual_tick - actual_process -> last_s >= actual_process -> s == 0
+					) {
+							actual_process -> last_s = actual_tick;
+							process_pop_index(queues[index], i);
+							process_insert(queues[2], actual_process);
+					}
+				}
+			} else {
+				break;
 			}
 		}
 
@@ -104,8 +153,14 @@ int main(int argc, char const *argv[])
 			for (int i = 0; i < queues[j] -> process_quantity; i++) {
 				Process *actual_process = queues[j] -> processes[i];
 
-				if ((actual_tick - actual_process -> init_time) % actual_process -> s == 0) {
-					continue;
+				// Check S
+				if (
+					(actual_process -> state == WAITING || actual_process -> state == READY)
+					&& actual_tick - actual_process -> last_s >= actual_process -> s == 0
+				) {
+						actual_process -> last_s = actual_tick;
+						process_pop_index(queues[index], i);
+						process_insert(queues[2], actual_process);
 				}
 			}
 		}
