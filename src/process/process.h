@@ -21,7 +21,7 @@ struct process
   int32_t first_execution;
   int32_t in_ready_count;
   int32_t in_waiting_count;
-  int32_t last_s;
+  int32_t s_debt;
   int32_t quantum_time;
 };
 

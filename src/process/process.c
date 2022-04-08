@@ -22,7 +22,7 @@ Process* process_init(
   process -> first_execution = 0;
   process -> in_ready_count = 0;
   process -> in_waiting_count = 0;
-  process -> last_s = init_time;
+  process -> s_debt = 0;
   process -> quantum_time = 0;
   return process;
 };

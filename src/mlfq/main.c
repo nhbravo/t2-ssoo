@@ -143,9 +143,8 @@ int main(int argc, char const *argv[])
 					if (
 						index != 2
 						&& (actual_process -> state == WAITING || actual_process -> state == READY)
-						&& (actual_tick - actual_process -> last_s >= actual_process -> s)
+						&& (actual_tick - actual_process -> init_time % actual_process -> s == 0)
 					) {
-							actual_process -> last_s = actual_tick;
 							process_pop(queues[index], i);
 							i --;
 							process_insert(queues[2], actual_process);
@@ -227,8 +226,8 @@ int main(int argc, char const *argv[])
 									actual_process -> enter_queue_time = actual_tick;
 									process_pop(queues[j], i);
 									i --;
-									if (actual_tick - actual_process -> last_s >= actual_process -> s) {
-										actual_process -> last_s = actual_tick;
+									if (actual_tick - actual_process -> init_time % actual_process -> s == 0 || actual_process -> s_debt) {
+										actual_process -> s_debt = 0;
 										process_insert(queues[2], actual_process);
 									} else {
 										process_insert(queues[j - 1], actual_process);
@@ -263,12 +262,14 @@ int main(int argc, char const *argv[])
 				if (actual_process) {
 					if (
 						(actual_process -> state == WAITING || actual_process -> state == READY)
-						&& (actual_tick - actual_process -> last_s >= actual_process -> s)
+						&& (actual_tick - actual_process -> init_time % actual_process -> s == 0)
 					) {
-							actual_process -> last_s = actual_tick;
 							process_pop(queues[index], i);
 							i --;
 							process_insert(queues[2], actual_process);
+					} else if (actual_process -> state == RUNNING
+						&& actual_tick - actual_process -> init_time % actual_process -> s == 0) {
+							actual_process -> s_debt = 1;
 					}
 				}
 			}
