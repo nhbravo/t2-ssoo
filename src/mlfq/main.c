@@ -139,7 +139,7 @@ int main(int argc, char const *argv[])
 					if (
 						index != 2
 						&& (actual_process -> state == WAITING || actual_process -> state == READY)
-						&& actual_tick - actual_process -> last_s >= actual_process -> s == 0
+						&& (actual_tick - actual_process -> last_s >= actual_process -> s)
 					) {
 							actual_process -> last_s = actual_tick;
 							process_pop(queues[index], i);
