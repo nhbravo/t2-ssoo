@@ -38,8 +38,11 @@ int main(int argc, char const *argv[])
 		process_insert(queues[2], process);
 	}
 
+	queue_merge_sort(queues[2], 0, queues[2] -> process_quantity - 1);
+
 	while (actual_tick >= 0) {
 		bool change_cpu_state = false;
+		bool added_to_q0 = false;
 		int index = 2;
 
 		while (queues[index] -> process_quantity == 0) {
@@ -81,7 +84,7 @@ int main(int argc, char const *argv[])
 						change_cpu_state = true;
 						if (index != 2) {
 							actual_process -> enter_queue_time = actual_tick;
-							process_pop_index(queues[index], i);
+							process_pop(queues[index], i);
 							process_insert(queues[2], actual_process);
 						}
 					} else if (index != 0) {
@@ -90,11 +93,14 @@ int main(int argc, char const *argv[])
 							actual_process -> interrupt_count ++;
 							change_cpu_state = true;
 							actual_process -> enter_queue_time = actual_tick;
-							process_pop_index(queues[index], i);
+							process_pop(queues[index], i);
 							process_insert(queues[index - 1], actual_process);
+							if (index - 1 == 0) {
+								added_to_q0 = true;
+							}
 						} else if (actual_process -> running_time == actual_process -> cycles) {
 							actual_process -> state = FINISHED;
-							process_pop(queues[index]);
+							process_pop(queues[index], i);
 							fprintf(
 								fpt,"%s,%i,%i,%i,%i,%i\n",
 								actual_process -> name,
@@ -109,7 +115,7 @@ int main(int argc, char const *argv[])
 						}
 					} else if (actual_process -> running_time == actual_process -> cycles) {
 						actual_process -> state = FINISHED;
-						process_pop(queues[index]);
+						process_pop(queues[index], i);
 						fprintf(
 							fpt,"%s,%i,%i,%i,%i,%i\n",
 							actual_process -> name,
@@ -138,7 +144,7 @@ int main(int argc, char const *argv[])
 						&& actual_tick - actual_process -> last_s >= actual_process -> s == 0
 					) {
 							actual_process -> last_s = actual_tick;
-							process_pop_index(queues[index], i);
+							process_pop(queues[index], i);
 							process_insert(queues[2], actual_process);
 					}
 				}
@@ -162,12 +168,15 @@ int main(int argc, char const *argv[])
 					&& actual_tick - actual_process -> last_s >= actual_process -> s == 0
 				) {
 						actual_process -> last_s = actual_tick;
-						process_pop_index(queues[index], i);
+						process_pop(queues[index], i);
 						process_insert(queues[2], actual_process);
 				}
 			}
 		}
 		
+		if (added_to_q0 && queues[0] -> process_quantity > 1) {
+			queue_merge_sort(queues[0], 0, queues[0] -> process_quantity - 1);
+		}
 		actual_tick ++;
 	}
 

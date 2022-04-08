@@ -8,6 +8,9 @@ Queue *queue_init(int process_quantity, int priority, int q, int total_processes
 
     queue -> process_quantity = process_quantity;
     queue -> processes = malloc(total_processes * sizeof(Process *));
+    for (int i = 0; i < total_processes; i++) {
+        queue -> processes[i] = NULL;
+    }
     queue -> priority = priority;
     queue -> quantum = q * priority;
 
@@ -24,123 +27,104 @@ void queue_destroy(Queue *queue)
     free(queue);
 }
 
-static void swap(Queue *queue, int i1, int i2)
+static int key(Process *process, int priority)
 {
-  Process *aux = queue -> processes[i1];
-  queue -> processes[i1] = queue -> processes[i2];
-  queue -> processes[i2] = aux;
-}
-
-static int key(Queue *queue, int i)
-{
-    if (queue -> priority)
+    if (priority)
     {
-        return queue -> processes[i] -> enter_queue_time;
+        return process -> enter_queue_time;
     }
     // Cola 3, revisar
-    return queue -> processes[i] -> cycles - queue -> processes[i] -> running_time;
-}
-
-static void sift_up(Queue *queue, int pos)
-{
-    if (!pos)
-        return;
-
-    int father = (pos - 1) / 2;
-    if (key(queue, father) > key(queue, pos))
-    {
-        swap(queue, pos, father);
-        sift_up(queue, father);
-    }
-    else if (key(queue, father) == key(queue, pos))
-    {
-        // Orden de ingreso, priorizar un proceso que sale de la CPU, revisar
-        if (
-            queue -> processes[father] -> init_time == queue -> processes[father] -> enter_queue_time
-            && queue -> processes[pos] -> init_time != queue -> processes[pos] -> enter_queue_time
-        )
-        {
-            swap(queue, pos, father);
-            sift_up(queue, father);
-        }
-    }
-}
-
-static void sift_down(Queue *queue, int pos)
-{
-    int left = pos * 2 + 1;
-    int right = left + 1;
-
-    if (queue -> process_quantity <= left)
-        return;
-
-    int smaller;
-    if (queue -> process_quantity == right || key(queue, left) < key(queue, right))
-        smaller = left;
-    else
-        smaller = right;
-
-    if (key(queue, pos) > key(queue, smaller))
-    {
-        swap(queue, pos, smaller);
-        sift_down(queue, smaller);
-    }
+    return process -> cycles - process -> running_time;
 }
 
 void process_insert(Queue *queue, Process *process)
 {
     queue -> processes[queue -> process_quantity] = process;
     queue -> process_quantity += 1;
-    sift_up(queue, queue -> process_quantity - 1);
+    int new_index = queue -> process_quantity - 1;
+    if (queue -> priority == 2) {
+        for (int i = queue -> process_quantity - 2; i >= 0; i --) {
+            if (key(queue -> processes[i], queue -> priority) == key(queue -> processes[new_index], queue -> priority)) {
+                if (
+                    queue -> processes[i] -> enter_queue_time == queue -> processes[i] -> init_time
+                    && queue -> processes[new_index] -> enter_queue_time != queue -> processes[new_index] -> init_time
+                ) {
+                    queue -> processes[new_index] = queue -> processes[i];
+                    queue -> processes[i] = process;
+                    new_index = i;
+                } else {
+                    break;
+                }
+            } else {
+                break;
+            }
+        }
+    }
 }
 
-Process *process_pop(Queue *queue)
-{
-    if (!queue -> process_quantity)
-        return NULL;
-
-    Process *process = queue -> processes[0];
-    queue -> process_quantity -= 1;
-    if (queue -> process_quantity > 0)
-    {
-        queue -> processes[0] = queue -> processes[queue -> process_quantity];
-        queue -> processes[queue -> process_quantity] = NULL;
-        sift_down(queue, 0);
-    }
-    else
-    {
-        queue -> processes[0] = NULL;
-    }
-
-    return process;
-}
-
-Process *process_pop_index(Queue *queue, int index)
+Process *process_pop(Queue *queue, int index)
 {
     if (!queue -> process_quantity)
         return NULL;
 
     Process *process = queue -> processes[index];
     queue -> process_quantity -= 1;
-    if (queue -> process_quantity > 0)
-    {
-        queue -> processes[index] = queue -> processes[queue -> process_quantity];
-        queue -> processes[queue -> process_quantity] = NULL;
-        int father = (index - 1) / 2;
-        if (father >= 0) {
-            if (key(queue, father) > key(queue, index)) {
-                sift_up(queue, index);
-            } else {
-                sift_down(queue, index);
-            }
-        } else {
-            sift_down(queue, index);
-        }
-    }
-    else
-    {
-        queue -> processes[index] = NULL;
+    for (int i = index; i <= queue -> process_quantity; i++) {
+        queue -> processes[index] = queue -> processes[index + 1];
     }
 
     return process;
+}
+
+// Merge sort adapted from https://www.geeksforgeeks.org/merge-sort/
+
+static void merge(Queue *queue, int l, int m, int r) {
+    int i, j, k;
+    int n1 = m - l + 1;
+    int n2 = r - m;
+  
+    Process *processes_L[n1], *processes_R[n2];
+  
+    for (i = 0; i < n1; i++)
+        processes_L[i] = queue -> processes[l + i];
+    for (j = 0; j < n2; j++)
+        processes_R[j] = queue -> processes[m + 1 + j];
+  
+    i = 0;
+    j = 0;
+    k = l;
+    while (i < n1 && j < n2) {
+        if (key(processes_L[i], queue -> priority) <= key(processes_R[j], queue -> priority)) {
+            queue -> processes[k] = processes_L[i];
+            i++;
+        }
+        else {
+            queue -> processes[k] = processes_R[j];
+            j++;
+        }
+        k++;
+    }
+  
+    while (i < n1) {
+        queue -> processes[k] = processes_L[i];
+        i++;
+        k++;
+    }
+  
+    while (j < n2) {
+        queue -> processes[k] = processes_R[j];
+        j++;
+        k++;
+    }
+}
+
+void queue_merge_sort(Queue *queue, int l, int r) {
+    if (l < r) {
+        int m = l + (r - l) / 2;
+
+        queue_merge_sort(queue, l, m);
+        queue_merge_sort(queue, m + 1, r);
+  
+        merge(queue, l, m, r);
+    }
 }
