@@ -44,6 +44,7 @@ int main(int argc, char const *argv[])
 		bool change_cpu_state = false;
 		bool added_to_q0 = false;
 		int index = 2;
+		bool find_running_process = true;
 
 		while (queues[index] -> process_quantity == 0) {
 			index --;
@@ -73,6 +74,7 @@ int main(int argc, char const *argv[])
 					if (cpu_free && actual_process -> in_ready_count > 0) {
 						cpu_free = false;
 						actual_process -> state = RUNNING;
+						find_running_process = false;
 						if (actual_process -> in_cpu_count == 0) {
 							actual_process -> first_execution = actual_tick;
 						}
@@ -81,7 +83,9 @@ int main(int argc, char const *argv[])
 						actual_process -> in_ready_count ++;
 					}
 				} else if (actual_process -> state == RUNNING) {
+					find_running_process = false;
 					actual_process -> running_time ++;
+					actual_process -> quantum_time ++;
 					if (actual_process -> running_time == actual_process -> cycles) {
 						actual_process -> state = FINISHED;
 						process_pop(queues[index], i);
@@ -100,6 +104,7 @@ int main(int argc, char const *argv[])
 						change_cpu_state = true;
 					} else if (actual_process -> running_time % actual_process -> wait == 0) {
 						actual_process -> state = WAITING;
+						actual_process -> quantum_time = 0;
 						change_cpu_state = true;
 						if (index != 2) {
 							actual_process -> enter_queue_time = actual_tick;
@@ -108,8 +113,9 @@ int main(int argc, char const *argv[])
 							process_insert(queues[2], actual_process);
 						}
 					} else if (index != 0) {
-						if (actual_process -> running_time % queues[index] -> quantum == 0) {
+						if (actual_process -> quantum_time == queues[index] -> quantum) {
 							actual_process -> state = READY;
+							actual_process -> quantum_time = 0;
 							actual_process -> interrupt_count ++;
 							change_cpu_state = true;
 							actual_process -> enter_queue_time = actual_tick;
@@ -126,7 +132,6 @@ int main(int argc, char const *argv[])
 					if (actual_process -> in_waiting_count % actual_process -> waiting_delay == 0) {
 						actual_process -> state = READY;
 					}
-					continue;
 				}
 
 				// Check S
@@ -147,19 +152,77 @@ int main(int argc, char const *argv[])
 			}
 		}
 
-		if (change_cpu_state) {
-			cpu_free = true;
-		}
-
 		index --;
 		for (int j = index; j >= 0; j--) {
 			for (int i = 0; i < queues[j] -> process_quantity; i++) {
 				Process *actual_process = queues[j] -> processes[i];
 
+				if (find_running_process) {
+					if (actual_process -> state == READY) {
+						// El proceso no puede entrar de una a CPU, tiene que estar READY, revisar
+						if (cpu_free && actual_process -> in_ready_count > 0) {
+							cpu_free = false;
+							actual_process -> state = RUNNING;
+							find_running_process = false;
+							if (actual_process -> in_cpu_count == 0) {
+								actual_process -> first_execution = actual_tick;
+							}
+							actual_process -> in_cpu_count ++;
+						} else {
+							actual_process -> in_ready_count ++;
+						}
+					} else if (actual_process -> state == RUNNING) {
+						find_running_process = false;
+						actual_process -> running_time ++;
+						actual_process -> quantum_time ++;
+						if (actual_process -> running_time == actual_process -> cycles) {
+							actual_process -> state = FINISHED;
+							process_pop(queues[index], i);
+							i --;
+							fprintf(
+								fpt,"%s,%i,%i,%i,%i,%i\n",
+								actual_process -> name,
+								actual_process -> in_cpu_count,
+								actual_process -> interrupt_count,
+								actual_tick - actual_process -> init_time,
+								actual_process -> first_execution - actual_process -> init_time,
+								actual_process -> in_ready_count + actual_process -> in_waiting_count
+							);
+							process_destroy(actual_process);
+							actual_process = NULL;
+							change_cpu_state = true;
+						} else if (actual_process -> running_time % actual_process -> wait == 0) {
+							actual_process -> state = WAITING;
+							actual_process -> quantum_time = 0;
+							change_cpu_state = true;
+							if (index != 2) {
+								actual_process -> enter_queue_time = actual_tick;
+								process_pop(queues[index], i);
+								i --;
+								process_insert(queues[2], actual_process);
+							}
+						} else if (index != 0) {
+							if (actual_process -> quantum_time == queues[index] -> quantum) {
+								actual_process -> state = READY;
+								actual_process -> quantum_time = 0;
+								actual_process -> interrupt_count ++;
+								change_cpu_state = true;
+								actual_process -> enter_queue_time = actual_tick;
+								process_pop(queues[index], i);
+								i --;
+								process_insert(queues[index - 1], actual_process);
+								if (index - 1 == 0) {
+									added_to_q0 = true;
+								}
+							}
+						}
+					}
+				}
+
 				// Check S
 				if (
 					(actual_process -> state == WAITING || actual_process -> state == READY)
-					&& actual_tick - actual_process -> last_s >= actual_process -> s == 0
+					&& (actual_tick - actual_process -> last_s >= actual_process -> s)
 				) {
 						actual_process -> last_s = actual_tick;
 						process_pop(queues[index], i);
@@ -168,6 +231,10 @@ int main(int argc, char const *argv[])
 				}
 			}
 		}
+
+		if (change_cpu_state) {
+			cpu_free = true;
+		}
 		
 		if (added_to_q0 && queues[0] -> process_quantity > 1) {
 			queue_merge_sort(queues[0], 0, queues[0] -> process_quantity - 1);
@@ -175,6 +242,7 @@ int main(int argc, char const *argv[])
 		actual_tick ++;
 	}
 
+	fclose(fpt);
 	for (int i = 2; i >= 0; i --) {
 		queue_destroy(queues[i]);
 	}

@@ -22,6 +22,7 @@ struct process
   int32_t in_ready_count;
   int32_t in_waiting_count;
   int32_t last_s;
+  int32_t quantum_time;
 };
 
 Process* process_init(

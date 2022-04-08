@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "queue.h"
 
@@ -40,8 +41,8 @@ static int key(Process *process, int priority)
 void process_insert(Queue *queue, Process *process)
 {
     queue -> processes[queue -> process_quantity] = process;
+    int new_index = queue -> process_quantity;
     queue -> process_quantity += 1;
-    int new_index = queue -> process_quantity - 1;
     if (queue -> priority == 2) {
         for (int i = queue -> process_quantity - 2; i >= 0; i --) {
             if (key(queue -> processes[i], queue -> priority) == key(queue -> processes[new_index], queue -> priority)) {
@@ -62,18 +63,13 @@ void process_insert(Queue *queue, Process *process)
     }
 }
 
-Process *process_pop(Queue *queue, int index)
+void process_pop(Queue *queue, int index)
 {
-    if (!queue -> process_quantity)
-        return NULL;
-
-    Process *process = queue -> processes[index];
     queue -> process_quantity -= 1;
-    for (int i = index; i <= queue -> process_quantity; i++) {
+    for (int i = index; i < queue -> process_quantity; i++) {
         queue -> processes[i] = queue -> processes[i + 1];
     }
-
-    return process;
+    queue -> processes[queue -> process_quantity] = NULL;
 }
 
 // Merge sort adapted from https://www.geeksforgeeks.org/merge-sort/

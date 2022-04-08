@@ -23,6 +23,7 @@ Process* process_init(
   process -> in_ready_count = 0;
   process -> in_waiting_count = 0;
   process -> last_s = init_time;
+  process -> quantum_time = 0;
   return process;
 };
 
