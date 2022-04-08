@@ -16,10 +16,8 @@ int main(int argc, char const *argv[])
 	printf("Nombre archivo: %s\n", file_name);
 	printf("Cantidad de procesos: %d\n", input_file->len);
 	printf("Procesos:\n");
-	// FILE *fpt, *debug;
 	FILE *fpt;
 	fpt = fopen((char *)argv[2], "w+");
-	// debug = fopen("debug.txt", "w+");
 	Queue *queues[3];
 	for (int i = 2; i >= 0; i --) {
 		queues[i] = queue_init(0, i, atoi(argv[3]), input_file->len);
@@ -150,19 +148,6 @@ int main(int argc, char const *argv[])
 							process_insert(queues[2], actual_process);
 					}
 				}
-				// if (actual_process) {
-				// 	fprintf(debug, "----------------------------------------\n");
-				// 	fprintf(debug, "NAME: %s\n", actual_process -> name);
-				// 	fprintf(debug, "ACTUAL_TICK: %i\n", actual_tick);
-				// 	fprintf(debug, "STATE: %i\n", actual_process -> state);
-				// 	fprintf(debug, "RUNNING_TIME: %i\n", actual_process -> running_time);
-				// 	fprintf(debug, "QUANTUM_TIME: %i\n", actual_process -> quantum_time);
-				// 	fprintf(debug, "S: %i\n", actual_process -> s);
-				// 	fprintf(debug, "LAST_S: %i\n", actual_process -> last_s);
-				// 	fprintf(debug, "ACTUAL_QUEUE: %i\n", index);
-				// 	fprintf(debug, "INDEX %i\n", i);
-				// 	fprintf(debug, "----------------------------------------\n");
-				// }
 			} else {
 				break;
 			}
@@ -243,20 +228,6 @@ int main(int argc, char const *argv[])
 				} else {
 					break;
 				}
-
-				// if (actual_process) {
-				// 	fprintf(debug, "----------------------------------------\n");
-				// 	fprintf(debug, "NAME: %s\n", actual_process -> name);
-				// 	fprintf(debug, "ACTUAL_TICK: %i\n", actual_tick);
-				// 	fprintf(debug, "STATE: %i\n", actual_process -> state);
-				// 	fprintf(debug, "RUNNING_TIME: %i\n", actual_process -> running_time);
-				// 	fprintf(debug, "QUANTUM_TIME: %i\n", actual_process -> quantum_time);
-				// 	fprintf(debug, "S: %i\n", actual_process -> s);
-				// 	fprintf(debug, "LAST_S: %i\n", actual_process -> last_s);
-				// 	fprintf(debug, "ACTUAL_QUEUE: %i\n", j);
-				// 	fprintf(debug, "INDEX %i\n", i);
-				// 	fprintf(debug, "----------------------------------------\n");
-				// }
 
 				// Check S
 				if (actual_process) {
