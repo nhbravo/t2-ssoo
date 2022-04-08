@@ -94,6 +94,7 @@ int main(int argc, char const *argv[])
 							process_insert(queues[index - 1], actual_process);
 						} else if (actual_process -> running_time == actual_process -> cycles) {
 							actual_process -> state = FINISHED;
+							process_pop(queues[index]);
 							fprintf(
 								fpt,"%s,%i,%i,%i,%i,%i\n",
 								actual_process -> name,
@@ -103,6 +104,8 @@ int main(int argc, char const *argv[])
 								actual_tick - actual_process -> init_time,
 								actual_process -> in_ready_count + actual_process -> in_waiting_count
 							);
+							process_destroy(actual_process);
+							actual_process = NULL;
 						}
 					} else if (actual_process -> running_time == actual_process -> cycles) {
 						actual_process -> state = FINISHED;

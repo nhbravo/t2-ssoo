@@ -2,3 +2,4 @@ mlfq
 !mlfq/
 obj/
 .vscode/
+*.csv
