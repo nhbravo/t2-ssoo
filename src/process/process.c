@@ -19,6 +19,7 @@ Process* process_init(
   process -> s = s;
   process -> in_cpu_count = 0;
   process -> interrupt_count = 0;
+  process -> first_execution = 0;
   process -> in_ready_count = 0;
   process -> in_waiting_count = 0;
   process -> last_s = init_time;

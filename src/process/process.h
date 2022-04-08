@@ -18,6 +18,7 @@ struct process
   int32_t s;
   int32_t in_cpu_count;
   int32_t interrupt_count;
+  int32_t first_execution;
   int32_t in_ready_count;
   int32_t in_waiting_count;
   int32_t last_s;

@@ -70,7 +70,7 @@ Process *process_pop(Queue *queue, int index)
     Process *process = queue -> processes[index];
     queue -> process_quantity -= 1;
     for (int i = index; i <= queue -> process_quantity; i++) {
-        queue -> processes[index] = queue -> processes[index + 1];
+        queue -> processes[i] = queue -> processes[i + 1];
     }
 
     return process;
