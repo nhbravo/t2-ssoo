@@ -35,7 +35,7 @@ static int key(Process *process, int priority)
         return process -> enter_queue_time;
     }
     // Cola 3, revisar
-    return process -> cycles - process -> running_time;
+    return process -> wait - process -> running_time % process -> wait;
 }
 
 void process_insert(Queue *queue, Process *process)
